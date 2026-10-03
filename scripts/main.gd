@@ -35,7 +35,7 @@ var cleared := 0
 var best := {}
 var vehicle_lv := {}
 var equipped := "jeep"
-var owned_vehicles: Array = ["jeep"]
+var owned_vehicles: Array = ["jeep", "tank", "ship", "plane"]  # 모든 탈것을 처음부터 보유
 var dex_kills := {}     # 도감: 공룡 종류별 누적 처치 수 (1 이상이면 발견)
 var codex_stage := 1
 var codex_return := 0   # 도감을 닫으면 돌아갈 상태
@@ -424,7 +424,6 @@ func _load() -> void:
 		best = cfg.get_value("save", "best", {})
 		vehicle_lv = cfg.get_value("save", "vehicle_lv", {})
 		equipped = str(cfg.get_value("save", "equipped", "jeep"))
-		owned_vehicles = cfg.get_value("save", "owned_vehicles", ["jeep"])
 		if not owned_vehicles.has(equipped):
 			equipped = "jeep"
 		voice.tts_enabled = bool(cfg.get_value("save", "voice", true))

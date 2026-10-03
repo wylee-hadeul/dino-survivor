@@ -144,15 +144,13 @@ func heal(v: float) -> void:
 
 func contact(e) -> void:
 	if vehicle != "" and vehicle != "plane":
-		return  # 탈것은 들이받기로 처리
+		return  # 지상 탈것은 들이받기로 처리 (전투기는 부딪히면 탈것 체력이 깎인다)
 	hurt(e.dmg)
 
 
 func hurt(dmg: float) -> void:
 	if dead or invuln > 0.0:
 		return
-	if vehicle == "plane":
-		return  # 하늘을 나는 중엔 무적
 	if run.god:
 		dmg = 0.0
 	if vehicle != "":

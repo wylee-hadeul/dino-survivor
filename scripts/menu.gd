@@ -498,7 +498,7 @@ func _draw_garage(v: Vector2) -> void:
 	draw_rect(Rect2(Vector2.ZERO, v), Color(0, 0, 0, 0.55))
 	_t(Vector2(v.x * 0.5, 104), "차고", 58, Color("90caf9"), HORIZONTAL_ALIGNMENT_CENTER, 12)
 	_gold(v.x - 30, 92)
-	_t(Vector2(v.x * 0.5, 160), "골드로 탈것을 사고 강화하세요. 게임 중 게이지가 차면 탑승!", 22, Color(1, 1, 1, 0.75), HORIZONTAL_ALIGNMENT_CENTER, 0)
+	_t(Vector2(v.x * 0.5, 160), "모든 탈것은 능력이 같아요. 좋아하는 탈것을 장착하세요!", 22, Color(1, 1, 1, 0.75), HORIZONTAL_ALIGNMENT_CENTER, 0)
 
 
 func _vehicle_card(b: Dictionary) -> void:

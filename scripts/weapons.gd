@@ -298,35 +298,35 @@ func _vehicle_update(delta: float, might: float) -> void:
 			if wv.cd <= 0.0 and run.enemies.nearest(pl.pos, 520.0):
 				wv.cd = 0.08
 				var d := _aim(520.0, pl.pos + Vector2(0, -50)).rotated(randf_range(-0.06, 0.06))
-				_shoot("bullet", pl.pos + Vector2(0, -50), d * 900.0, 10.0 * vm, 8.0, 0.7, 1)
+				_shoot("bullet", pl.pos + Vector2(0, -50), d * 900.0, 12.0 * vm, 8.0, 0.7, 1)  # 150/초
 				run.sfx.play("shoot", -16.0, 1.3)
-			_crush(60.0, 40.0 * vm, 380.0)
+			_crush(66.0, 30.0 * vm, 340.0)
 		"tank":
 			if wv.cd <= 0.0 and run.enemies.nearest(pl.pos, 600.0):
-				wv.cd = 0.6
+				wv.cd = 0.5
 				var d := _aim(600.0, pl.pos + Vector2(0, -66))
 				pl.turret_angle = d.angle()
-				var p := _shoot("shell", pl.pos + Vector2(0, -66) + d * 60.0, d * 700.0, 60.0 * vm, 14.0, 1.0)
+				var p := _shoot("shell", pl.pos + Vector2(0, -66) + d * 60.0, d * 700.0, 75.0 * vm, 14.0, 1.0)  # 150/초 (범위)
 				p.aoe = 95.0
 				p.scale = 1.4
 				run.sfx.play("shotgun", -4.0, 0.6)
 				run.fx.burst(pl.pos + Vector2(0, -40) + d * 70.0, Color(1, 0.8, 0.4), 6)
-			_crush(72.0, 30.0 * vm, 300.0)
+			_crush(66.0, 30.0 * vm, 340.0)
 		"ship":
 			if wv.cd <= 0.0:
-				wv.cd = 1.1
-				for k in 10:
-					var d := Vector2.RIGHT.rotated(TAU * k / 10.0 + randf_range(-0.1, 0.1))
-					var p := _shoot("missile", pl.pos + Vector2(0, -50), d * 420.0, 30.0 * vm, 14.0, 1.6)
+				wv.cd = 1.0
+				for k in 6:
+					var d := Vector2.RIGHT.rotated(TAU * k / 6.0 + randf_range(-0.1, 0.1))
+					var p := _shoot("missile", pl.pos + Vector2(0, -50), d * 420.0, 25.0 * vm, 14.0, 1.6)  # 150/초
 					p.homing = 3.0
 					p.aoe = 60.0
 				run.sfx.play("laser", -8.0, 0.6)
-			_crush(70.0, 30.0 * vm, 300.0)
+			_crush(66.0, 30.0 * vm, 340.0)
 		"plane":
 			bomb_t -= delta
 			if bomb_t <= 0.0:
 				bomb_t = 0.13
-				var p := _shoot("bomb", pl.pos + Vector2(randf_range(-40, 40), randf_range(-20, 20)), Vector2.ZERO, 35.0 * vm, 0.0, 1.0)
+				var p := _shoot("bomb", pl.pos + Vector2(randf_range(-40, 40), randf_range(-20, 20)), Vector2.ZERO, 10.0 * vm, 0.0, 1.0)  # 폭격 ~77/초
 				p.lob = true
 				p.start = pl.pos + Vector2(0, -90)
 				p.target = p.pos
@@ -336,7 +336,7 @@ func _vehicle_update(delta: float, might: float) -> void:
 				wv.cd = 0.1
 				var d := _aim(600.0, pl.pos + Vector2(0, -90))
 				for o in [-14.0, 14.0]:
-					_shoot("bullet", pl.pos + Vector2(0, -90) + d.orthogonal() * o, d * 950.0, 12.0 * vm, 8.0, 0.7)
+					_shoot("bullet", pl.pos + Vector2(0, -90) + d.orthogonal() * o, d * 950.0, 4.0 * vm, 8.0, 0.7)  # 기관포 ~80/초
 
 
 ## 탈것으로 들이받기

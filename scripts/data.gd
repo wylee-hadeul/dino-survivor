@@ -148,12 +148,12 @@ static func talent_cost(t: Dictionary, lvl: int) -> int:
 
 
 # ------------------------------------------------------------------ 탈것
-## price: 차고에서 구매하는 가격 (0 = 기본 보유)
+## 탈것은 처음부터 모두 보유하며 능력치(시간/속도/체력)가 같다. 공격 방식만 다르고 초당 공격력은 약 150으로 맞춘다.
 const VEHICLES := [
-	{"id": "jeep", "name": "지프", "price": 0, "desc": "빠르게 달리며 들이받고\n기관총을 난사한다", "time": 12.0, "speed": 1.8, "hp": 150.0, "col": Color("c2a46b")},
-	{"id": "tank", "name": "탱크", "price": 600, "desc": "단단한 장갑과\n폭발하는 포탄", "time": 15.0, "speed": 1.15, "hp": 400.0, "col": Color("6f8a3c")},
-	{"id": "ship", "name": "전투함", "price": 1300, "desc": "수륙양용 전투함.\n사방으로 미사일 일제 사격", "time": 15.0, "speed": 1.4, "hp": 300.0, "col": Color("607d8b")},
-	{"id": "plane", "name": "전투기", "price": 2000, "desc": "하늘을 날아 무적!\n융단 폭격과 기관포", "time": 12.0, "speed": 2.2, "hp": 1.0, "col": Color("90a4ae")},
+	{"id": "jeep", "name": "지프", "price": 0, "desc": "빠르게 달리며 들이받고\n기관총을 난사한다", "time": 13.0, "speed": 1.6, "hp": 300.0, "col": Color("c2a46b")},
+	{"id": "tank", "name": "탱크", "price": 0, "desc": "들이받으며 달리고\n폭발하는 포탄을 쏜다", "time": 13.0, "speed": 1.6, "hp": 300.0, "col": Color("6f8a3c")},
+	{"id": "ship", "name": "전투함", "price": 0, "desc": "수륙양용 전투함.\n사방으로 유도 미사일 발사", "time": 13.0, "speed": 1.6, "hp": 300.0, "col": Color("607d8b")},
+	{"id": "plane", "name": "전투기", "price": 0, "desc": "하늘을 날며\n융단 폭격과 기관포", "time": 13.0, "speed": 1.6, "hp": 300.0, "col": Color("90a4ae")},
 ]
 
 static func vehicle(id: String) -> Dictionary:
