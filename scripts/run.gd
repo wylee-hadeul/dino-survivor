@@ -229,6 +229,10 @@ func _swarm(kind: String) -> void:
 func on_enemy_killed(e) -> void:
 	kills += 1
 	kill_counts[e.kind] = kill_counts.get(e.kind, 0) + 1
+	var first: bool = int(main.dex_kills.get(e.kind, 0)) == 0
+	main.dex_kills[e.kind] = int(main.dex_kills.get(e.kind, 0)) + 1
+	if first:
+		fx.text(e.pos + Vector2(0, -e.r * 3.0 - 40.0), "도감 등록! " + Data.dino_name(e.kind), Color("80deea"), 28)
 	player.add_ride(1)
 	if e.boss:
 		fx.explosion(e.pos, 2.0, Color(1, 0.6, 0.3))

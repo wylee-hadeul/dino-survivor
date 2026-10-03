@@ -59,6 +59,46 @@ const BOSSES := {
 	"giga": {"name": "기가노토사우루스", "hp": 5200.0, "speed": 92.0, "dmg": 30.0, "r": 66.0, "s": 1.0, "sprite": "giga"},
 }
 
+# ------------------------------------------------------------------ 도감
+const DINO_INFO := {
+	"compy": {"era": "쥐라기 후기", "desc": "닭만 한 작은 육식 공룡.\n떼를 지어 몰려다닌다.", "tip": "약하지만 수가 많다. 범위 무기로 쓸어버리자."},
+	"raptor": {"era": "백악기 후기", "desc": "뒷발의 갈고리 발톱이 무기인\n영리하고 날쌘 사냥꾼.", "tip": "빠르게 쫓아온다. 멈추지 말고 계속 움직이자."},
+	"dilo": {"era": "쥐라기 전기", "desc": "머리에 볏이 두 개 있는 공룡.\n화가 나면 목 주름을 펼친다.", "tip": "멀리서 침을 뱉는다. 초록 침을 피하자."},
+	"trike": {"era": "백악기 후기", "desc": "뿔 세 개와 커다란 프릴을 가진\n튼튼한 초식 공룡.", "tip": "몸을 떤 뒤 돌진한다. 옆으로 비켜서자."},
+	"ptero": {"era": "백악기 후기", "desc": "하늘을 나는 익룡.\n사실 공룡이 아니라 공룡의 사촌이다.", "tip": "빠르게 날아든다. 자동 조준 무기가 유리하다."},
+	"ankylo": {"era": "백악기 후기", "desc": "갑옷 같은 등과 곤봉 꼬리를 가진\n걸어 다니는 탱크.", "tip": "단단해서 받는 피해가 줄어든다. 화력을 집중하자."},
+	"pachy": {"era": "백악기 후기", "desc": "두께 25cm의 돔 머리로\n박치기를 하는 공룡.", "tip": "몸을 떤 뒤 박치기 돌진! 옆으로 피하자."},
+	"stego": {"era": "쥐라기 후기", "desc": "등에 골판, 꼬리에 가시가 달린\n거대한 초식 공룡.", "tip": "느리지만 체력이 엄청나다. 거리를 두고 공격하자."},
+	"raptor_king": {"era": "보스", "desc": "랩터 무리를 이끄는 우두머리.\n머리에 왕관을 썼다.", "tip": "빨간 예고선 방향으로 돌진하고 부하 랩터를 부른다."},
+	"trike_king": {"era": "보스", "desc": "섬에서 가장 큰 트리케라톱스.\n무리의 왕이다.", "tip": "연속 돌진 뒤 충격파를 일으킨다. 고리를 넘어 피하자."},
+	"trex": {"era": "백악기 후기", "desc": "공룡의 왕 티라노사우루스.\n자동차도 부수는 턱 힘을 가졌다.", "tip": "포효 충격파, 낙석, 돌진을 번갈아 쓴다."},
+	"spino": {"era": "백악기 전기", "desc": "등에 돛이 달린 거대한 육식 공룡.\n물가에서 물고기를 사냥했다.", "tip": "부채꼴로 침을 뱉고, 높이 뛰어올라 덮친다."},
+	"brachio": {"era": "쥐라기 후기", "desc": "기린처럼 긴 목을 가진\n초거대 초식 공룡.", "tip": "발 구르기 충격파 3연타와 낙석, 콤프 소환에 주의."},
+	"giga": {"era": "백악기 전기", "desc": "티라노보다 더 큰 육식 공룡\n기가노토사우루스.", "tip": "연속 돌진, 포효, 부하 소환. 체력이 엄청나다."},
+}
+
+
+## 스테이지에 나오는 공룡 목록 (일반 → 중간 보스 → 최종 보스)
+static func stage_dinos(s: int) -> Array:
+	var info := stage_info(s)
+	var out: Array = info.pool.duplicate()
+	out.append(info.mini)
+	out.append(info.boss)
+	return out
+
+
+static func dino_name(kind: String) -> String:
+	if ENEMIES.has(kind):
+		return ENEMIES[kind].name
+	return BOSSES[kind].name
+
+
+static func dino_sprite(kind: String) -> String:
+	if BOSSES.has(kind):
+		return BOSSES[kind].sprite
+	return kind
+
+
 # ------------------------------------------------------------------ 스테이지
 ## pool: 시간이 지날수록 앞에서부터 하나씩 추가로 등장
 const STAGES := [

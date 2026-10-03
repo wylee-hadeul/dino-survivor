@@ -24,7 +24,7 @@ func open() -> void:
 
 
 func active() -> bool:
-	return main.state in [main.State.TITLE, main.State.CHARSELECT, main.State.LOBBY, main.State.TALENT, main.State.GARAGE, main.State.RESULT]
+	return main.state in [main.State.TITLE, main.State.CHARSELECT, main.State.CODEX, main.State.LOBBY, main.State.TALENT, main.State.GARAGE, main.State.RESULT]
 
 
 func show_toast(s: String) -> void:
@@ -57,12 +57,23 @@ func layout() -> Array:
 			out.append({"id": "prev", "rect": Rect2(p.position.x - 30, p.get_center().y - 50, 70, 100), "kind": "arrow", "dir": -1, "enabled": main.selected_stage > 1})
 			out.append({"id": "next", "rect": Rect2(p.end.x - 40, p.get_center().y - 50, 70, 100), "kind": "arrow", "dir": 1, "enabled": main.selected_stage < main.unlocked})
 			out.append({"id": "play", "rect": Rect2(cx - 230, p.end.y + 40, 460, 124), "label": "출격!", "col": GREEN, "size": 56, "enabled": true})
+			out.append({"id": "codex", "rect": Rect2(p.end.x - 132, p.position.y + 16, 116, 58), "label": "도감", "col": Color("00838f"), "size": 30, "enabled": true})
 			var bw: float = min(210.0, (v.x - 80.0) / 3.0)
 			var by := v.y - 170.0
 			out.append({"id": "talent", "rect": Rect2(cx - bw * 1.5 - 12, by, bw, 104), "label": "강화", "col": ORANGE, "enabled": true})
 			out.append({"id": "garage", "rect": Rect2(cx - bw * 0.5, by, bw, 104), "label": "차고", "col": BLUE, "enabled": true})
 			out.append({"id": "voice", "rect": Rect2(cx + bw * 0.5 + 12, by, bw, 104), "label": "음성 켜짐" if main.voice.tts_enabled else "음성 꺼짐", "col": GREY, "size": 30, "enabled": true})
 			out.append({"id": "charsel", "rect": Rect2(cx - 290, 380, 150, 64), "label": "캐릭터", "col": Color("8e24aa"), "size": 28, "enabled": true})
+		main.State.CODEX:
+			if main.codex_detail != "":
+				out.append({"id": "dex_close", "rect": Rect2(cx - 160, v.y * 0.5 + 330, 320, 96), "label": "닫기", "col": GREY, "enabled": true})
+			else:
+				out.append({"id": "back", "rect": Rect2(24, 40, 150, 72), "label": "뒤로", "col": GREY, "enabled": true})
+				var kinds: Array = Data.stage_dinos(main.codex_stage)
+				var w: float = min(660.0, v.x - 40.0)
+				var h := 122.0
+				for i in kinds.size():
+					out.append({"id": "dex:" + kinds[i], "rect": Rect2(cx - w * 0.5, 200.0 + i * (h + 10.0), w, h), "kind": "dex", "k": kinds[i], "enabled": true})
 		main.State.TALENT:
 			out.append({"id": "back", "rect": Rect2(24, 40, 150, 72), "label": "뒤로", "col": GREY, "enabled": true})
 			var cols := 3
@@ -144,6 +155,8 @@ func _input(event: InputEvent) -> void:
 	if key == KEY_ESCAPE or key == KEY_BACKSPACE:
 		if main.state in [main.State.TALENT, main.State.GARAGE]:
 			activate("back")
+		elif main.state == main.State.CODEX:
+			main.close_codex()
 		return
 	var enabled_idx: Array = []
 	for i in btns.size():
@@ -181,7 +194,14 @@ func activate(id: String) -> void:
 			if main.voice.tts_enabled:
 				main.voice.speak("음성을 켰어요!")
 		"back", "lobby":
-			main.goto_lobby()
+			if main.state == main.State.CODEX:
+				main.close_codex()
+			else:
+				main.goto_lobby()
+		"codex":
+			main.open_codex(main.selected_stage, main.State.LOBBY)
+		"dex_close":
+			main.codex_detail = ""
 		"charsel":
 			main.set_state(main.State.CHARSELECT)
 		"char_ok":
@@ -191,7 +211,9 @@ func activate(id: String) -> void:
 		"retry":
 			main.start_run(main.result.stage)
 		_:
-			if id.begins_with("char:"):
+			if id.begins_with("dex:"):
+				main.codex_detail = id.substr(4)
+			elif id.begins_with("char:"):
 				main.choose_character(id.substr(5))
 				main.voice.say("start", true)
 			elif id.begins_with("buy:"):
@@ -226,6 +248,8 @@ func _draw() -> void:
 			_draw_title(v)
 		main.State.CHARSELECT:
 			_draw_charselect(v)
+		main.State.CODEX:
+			_draw_codex(v)
 		main.State.LOBBY:
 			_draw_lobby(v)
 		main.State.TALENT:
@@ -246,6 +270,8 @@ func _draw() -> void:
 				_talent_card(b, i == focus)
 			"char":
 				_char_card(b)
+			"dex":
+				_dex_card(b)
 			"vehicle":
 				_vehicle_card(b)
 			_:
@@ -295,6 +321,81 @@ func _draw_title(v: Vector2) -> void:
 	var blink := 0.55 + sin(main.time * 5.0) * 0.45
 	_t(Vector2(v.x * 0.5, v.y * 0.76), "화면을 터치해서 시작", 44, Color(1, 1, 1, blink))
 	_t(Vector2(v.x * 0.5, v.y * 0.82), "드래그로 이동, 무기는 자동 공격!", 28, Color(1, 1, 1, 0.8), HORIZONTAL_ALIGNMENT_CENTER, 5)
+
+
+func _draw_codex(v: Vector2) -> void:
+	draw_rect(Rect2(Vector2.ZERO, v), Color(0.03, 0.06, 0.05, 0.82))
+	var s: int = main.codex_stage
+	var kinds: Array = Data.stage_dinos(s)
+	_t(Vector2(v.x * 0.5, 100), "공룡 도감", 56, Color("80deea"), HORIZONTAL_ALIGNMENT_CENTER, 12)
+	_t(Vector2(v.x * 0.5, 150), "스테이지 %d  %s   발견 %d / %d" % [s, Data.stage_info(s).name, main.dex_found(s), kinds.size()], 26, Color(1, 1, 1, 0.85), HORIZONTAL_ALIGNMENT_CENTER, 5)
+	if main.codex_detail != "":
+		_dex_detail(v, main.codex_detail)
+
+
+## 스테이지 난이도를 반영한 기본 수치
+func _dex_stats(k: String) -> Dictionary:
+	var s: int = main.codex_stage
+	if Data.ENEMIES.has(k):
+		var d: Dictionary = Data.ENEMIES[k]
+		return {"hp": d.hp * Data.stage_hp_mult(s), "spd": d.speed, "atk": d.dmg * Data.stage_dmg_mult(s)}
+	var b: Dictionary = Data.BOSSES[k]
+	return {"hp": b.hp * Data.boss_hp_mult(s), "spd": b.speed, "atk": b.dmg * Data.stage_dmg_mult(s)}
+
+
+func _dex_sprite(k: String, center: Vector2, max_size: Vector2, found: bool) -> void:
+	var sp: String = Data.dino_sprite(k)
+	var sz: Vector2 = main.sprites.size_of(sp)
+	var sc: float = min(max_size.x / sz.x, max_size.y / sz.y)
+	var mod := Color.WHITE if found else Color(0.05, 0.06, 0.06, 0.95)
+	var foot := center + Vector2(0, sz.y * sc * 0.5)
+	main.sprites.draw(self, sp, foot, int(main.time * 3.0) % 2 if found else 0, false, sc, mod)
+	if found and (k == "raptor_king" or k == "trike_king"):
+		main.sprites.draw(self, "crown", foot + Vector2(sz.x * sc * 0.18, -sz.y * sc * 0.92), 0, false, 0.9)
+
+
+func _dex_card(b: Dictionary) -> void:
+	var k: String = b.k
+	var r: Rect2 = b.rect
+	var kills: int = int(main.dex_kills.get(k, 0))
+	var found := kills > 0
+	var boss: bool = Data.BOSSES.has(k)
+	var border := Color("ff8a80") if boss else Color("80deea")
+	_panel(r, border if found else Color(0.3, 0.3, 0.3), Color(0.08, 0.11, 0.11, 0.95))
+	_dex_sprite(k, r.position + Vector2(90, r.size.y * 0.5), Vector2(150, 100), found)
+	var x := r.position.x + 186
+	var name := Data.dino_name(k) if found else "???"
+	_t(Vector2(x, r.position.y + 42), name, 32, Color.WHITE if found else Color(0.6, 0.6, 0.6), HORIZONTAL_ALIGNMENT_LEFT, 5)
+	if boss:
+		_t(Vector2(r.end.x - 20, r.position.y + 40), "최종 보스" if k == Data.stage_info(main.codex_stage).boss else "중간 보스", 22, Color("ff8a80"), HORIZONTAL_ALIGNMENT_RIGHT, 4)
+	if found:
+		var st := _dex_stats(k)
+		_t(Vector2(x, r.position.y + 78), "체력 %d   속도 %d   공격 %d" % [int(st.hp), int(st.spd), int(st.atk)], 20, Color(0.85, 0.9, 0.9), HORIZONTAL_ALIGNMENT_LEFT, 0)
+		_t(Vector2(x, r.position.y + 106), "처치 %d   /   %s" % [kills, Data.DINO_INFO[k].era], 20, Color("ffd54f"), HORIZONTAL_ALIGNMENT_LEFT, 0)
+	else:
+		_t(Vector2(x, r.position.y + 84), "아직 쓰러뜨리지 못한 공룡", 22, Color(0.6, 0.6, 0.6), HORIZONTAL_ALIGNMENT_LEFT, 0)
+
+
+func _dex_detail(v: Vector2, k: String) -> void:
+	var found: bool = int(main.dex_kills.get(k, 0)) > 0
+	var p := Rect2(v.x * 0.5 - min(320.0, v.x * 0.5 - 20.0), v.y * 0.5 - 420, min(640.0, v.x - 40.0), 740)
+	_panel(p, Color("80deea"), Color(0.06, 0.09, 0.09, 0.98))
+	var cx := p.get_center().x
+	_dex_sprite(k, Vector2(cx, p.position.y + 190), Vector2(440, 260), found)
+	if not found:
+		_t(Vector2(cx, p.position.y + 400), "???", 56, Color(0.6, 0.6, 0.6))
+		_t(Vector2(cx, p.position.y + 460), "쓰러뜨리면 정보가 공개됩니다", 28, Color(0.8, 0.8, 0.8), HORIZONTAL_ALIGNMENT_CENTER, 0)
+		return
+	var info: Dictionary = Data.DINO_INFO[k]
+	var st := _dex_stats(k)
+	_t(Vector2(cx, p.position.y + 380), Data.dino_name(k), 48, Color.WHITE)
+	_t(Vector2(cx, p.position.y + 418), info.era, 24, Color("80deea"), HORIZONTAL_ALIGNMENT_CENTER, 0)
+	var lines: PackedStringArray = info.desc.split("\n")
+	for i in lines.size():
+		_t(Vector2(cx, p.position.y + 470 + i * 36), lines[i], 28, Color(0.92, 0.92, 0.92), HORIZONTAL_ALIGNMENT_CENTER, 0)
+	_t(Vector2(cx, p.position.y + 568), "공략: " + info.tip, 22, Color("ffcc80"), HORIZONTAL_ALIGNMENT_CENTER, 0)
+	_t(Vector2(cx, p.position.y + 618), "체력 %d   속도 %d   공격 %d" % [int(st.hp), int(st.spd), int(st.atk)], 24, Color(0.85, 0.9, 0.9), HORIZONTAL_ALIGNMENT_CENTER, 0)
+	_t(Vector2(cx, p.position.y + 660), "누적 처치 %d" % int(main.dex_kills.get(k, 0)), 26, Color("ffd54f"), HORIZONTAL_ALIGNMENT_CENTER, 0)
 
 
 const CHAR_INFO := {

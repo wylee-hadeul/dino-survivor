@@ -25,6 +25,8 @@ var god := false
 var start_stage := 0
 var suicide_at := -1.0
 var shot_keys := {}
+var codex_done := 0  # 도감 검수 단계
+var pause_codex_at := -1.0  # 검수용: 이 시각에 일시정지 → 도감
 var wander := 0.0
 var skip_to := -1.0  # 스테이지 시작 시 이 시각으로 건너뛴다 (보스 검수용)
 var chase_boss := false
@@ -64,6 +66,8 @@ func configure(args: PackedStringArray) -> void:
 			chase_boss = true
 		elif a.begins_with("--char="):
 			main.choose_character(a.substr(7))
+		elif a.begins_with("--pausecodex="):
+			pause_codex_at = float(a.substr(13))
 		elif a == "--god":
 			god = true
 	main.voice.tts_enabled = false  # 테스트 중엔 음성을 끈다
@@ -94,7 +98,11 @@ func _process(delta: float) -> void:
 				wait_t = 0.0
 		S.LOBBY:
 			_shot("lobby")
-			if wait_t > 0.8:
+			if codex_done == 1 and wait_t > 0.5:
+				codex_done = 2
+				main.menu.activate("codex")
+				wait_t = 0.0
+			elif wait_t > 0.8:
 				wait_t = 0.0
 				if _buyable_vehicle() != "":
 					main.menu.activate("garage")
@@ -129,12 +137,36 @@ func _process(delta: float) -> void:
 					main.menu.activate("vup:" + best_v)
 				else:
 					main.menu.activate("back")
+		S.PAUSE:
+			if wait_t > 0.8:
+				_shot("pause_after_codex")
+				main._pause_action("resume")
+				main.dlog("resumed from pause")
+		S.CODEX:
+			if wait_t > 0.6 and main.codex_detail == "":
+				_shot("codex_s%d" % main.codex_stage)
+				var kinds: Array = Data.stage_dinos(main.codex_stage)
+				var target := ""
+				for k in kinds:
+					if int(main.dex_kills.get(k, 0)) > 0:
+						target = k
+				if target != "" and not shot_keys.has("codex_detail"):
+					main.menu.activate("dex:" + target)
+				else:
+					main.close_codex()
+				wait_t = 0.0
+			elif wait_t > 0.6 and main.codex_detail != "":
+				_shot("codex_detail")
+				main.close_codex()
+				wait_t = 0.0
 		S.LEVELUP:
 			if main.levelup_t > 0.6:
 				_shot("levelup")
 				main.choose(_pick_choice())
 		S.RESULT:
 			_shot("result_%s" % ("clear" if main.result.cleared else "fail"))
+			if codex_done == 0:
+				codex_done = 1  # 첫 결과 후 로비에서 도감을 한 번 열어본다
 			if wait_t > 2.0:
 				wait_t = 0.0
 				main.menu.activate("lobby")
@@ -170,6 +202,12 @@ func _process(delta: float) -> void:
 func _play() -> void:
 	var r = main.run
 	var p = r.player
+	if pause_codex_at > 0.0 and elapsed >= pause_codex_at:
+		pause_codex_at = -1.0
+		main.state = main.State.PAUSE
+		_screenshot("pause")
+		main._pause_action("codex")
+		return
 	if skip_to > 0.0 and r.t < skip_to - 5.0:
 		r.t = skip_to
 		r.events["mini"] = true

@@ -11,7 +11,7 @@ const SfxScript = preload("res://scripts/sfx.gd")
 const VoiceScript = preload("res://scripts/voice.gd")
 const AutoplayScript = preload("res://scripts/autoplay.gd")
 
-enum State { BOOT, TITLE, CHARSELECT, LOBBY, TALENT, GARAGE, PLAYING, LEVELUP, PAUSE, RESULT }
+enum State { BOOT, TITLE, CHARSELECT, LOBBY, TALENT, GARAGE, CODEX, PLAYING, LEVELUP, PAUSE, RESULT }
 
 var save_path := "user://save.cfg"
 var state := State.BOOT
@@ -36,6 +36,10 @@ var best := {}
 var vehicle_lv := {}
 var equipped := "jeep"
 var owned_vehicles: Array = ["jeep"]
+var dex_kills := {}     # 도감: 공룡 종류별 누적 처치 수 (1 이상이면 발견)
+var codex_stage := 1
+var codex_return := 0   # 도감을 닫으면 돌아갈 상태
+var codex_detail := ""  # 상세 보기 중인 공룡
 var character := ""   # "m" 남자 / "f" 여자. 비어 있으면 처음 시작 시 선택 화면
 
 var selected_stage := 1
@@ -149,6 +153,31 @@ func choose_character(c: String) -> void:
 	voice.gender = c
 	save_game()
 	dlog("character: %s" % c)
+
+
+## 도감 열기: 스테이지 s의 공룡들. back은 닫을 때 돌아갈 상태
+func open_codex(s: int, back: State) -> void:
+	codex_stage = s
+	codex_return = back
+	codex_detail = ""
+	set_state(State.CODEX)
+	dlog("codex stage=%d" % s)
+
+
+func close_codex() -> void:
+	if codex_detail != "":
+		codex_detail = ""
+		return
+	state = codex_return
+	menu.open()
+
+
+func dex_found(s: int) -> int:
+	var n := 0
+	for k in Data.stage_dinos(s):
+		if int(dex_kills.get(k, 0)) > 0:
+			n += 1
+	return n
 
 
 func set_state(s: State) -> void:
@@ -346,6 +375,8 @@ func _input(event: InputEvent) -> void:
 func _pause_action(id: String) -> void:
 	if id == "resume":
 		state = State.PLAYING
+	elif id == "codex":
+		open_codex(run.stage, State.PAUSE)
 	else:
 		run.player.dead = true
 		run._finish(false)
@@ -398,6 +429,7 @@ func _load() -> void:
 			equipped = "jeep"
 		voice.tts_enabled = bool(cfg.get_value("save", "voice", true))
 		character = str(cfg.get_value("save", "character", ""))
+		dex_kills = cfg.get_value("save", "dex_kills", {})
 	voice.gender = "f" if character == "f" else "m"
 	selected_stage = unlocked
 
@@ -414,4 +446,5 @@ func save_game() -> void:
 	cfg.set_value("save", "owned_vehicles", owned_vehicles)
 	cfg.set_value("save", "voice", voice.tts_enabled)
 	cfg.set_value("save", "character", character)
+	cfg.set_value("save", "dex_kills", dex_kills)
 	cfg.save(save_path)

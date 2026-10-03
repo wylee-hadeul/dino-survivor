@@ -92,7 +92,8 @@ func pause_buttons() -> Array:
 	var v: Vector2 = main.view
 	return [
 		{"id": "resume", "rect": Rect2(v.x * 0.5 - 200, v.y * 0.5 - 40, 400, 110), "label": "계속하기", "col": Color("43a047")},
-		{"id": "quit", "rect": Rect2(v.x * 0.5 - 200, v.y * 0.5 + 100, 400, 110), "label": "포기하기", "col": Color("c62828")},
+		{"id": "codex", "rect": Rect2(v.x * 0.5 - 200, v.y * 0.5 + 100, 400, 110), "label": "공룡 도감", "col": Color("00838f")},
+		{"id": "quit", "rect": Rect2(v.x * 0.5 - 200, v.y * 0.5 + 240, 400, 110), "label": "포기하기", "col": Color("c62828")},
 	]
 
 
