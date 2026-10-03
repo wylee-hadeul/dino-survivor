@@ -77,66 +77,96 @@ static func player_f(c: CanvasItem, frame: int) -> void:
 
 
 ## female=false: 철수 (탐험모 + 검은 앞머리, 파란 조끼)
-## female=true : 영희 (검은 양갈래 머리 + 빨간 리본, 분홍 조끼)
+## female=true : 영희 (분홍 리본 탐험모, 갈색 긴 머리, 큰 눈, 카키 셔츠 + 분홍 스카프)
 static func player(c: CanvasItem, frame: int, female := false) -> void:
-	var skin := Color("f5cba7")
-	var vest := Color("e2708f") if female else Color("3f6fb5")
-	var pants := Color("3b4a6b") if female else Color("6d5a44")
-	var hair := Color("231a14")
-	var ribbon := Color("e53935")
 	if female:
-		# 양갈래 머리 (뒤쪽)
-		for side in [-1.0, 1.0]:
-			var base := Vector2(2 + side * 18.0, -72)
-			poly(c, PackedVector2Array([base + Vector2(side * -4, -4), base + Vector2(side * 14, 6), base + Vector2(side * 16, 24), base + Vector2(side * 6, 30), base + Vector2(side * 2, 12), base + Vector2(side * -2, -2)]), hair)
-			c.draw_circle(base + Vector2(side * 4, 0), 5.0, OL)
-			c.draw_circle(base + Vector2(side * 4, 0), 3.5, ribbon)
+		_younghee(c, frame)
+		return
+	var skin := Color("f5cba7")
+	var vest := Color("3f6fb5")
+	var pants := Color("6d5a44")
+	var hair := Color("231a14")
 	# 배낭
-	poly(c, PackedVector2Array([Vector2(-24, -54), Vector2(-10, -56), Vector2(-10, -28), Vector2(-24, -30)]), Color("8d5a3a") if female else Color("7a5a3a"))
+	poly(c, PackedVector2Array([Vector2(-24, -54), Vector2(-10, -56), Vector2(-10, -28), Vector2(-24, -30)]), Color("7a5a3a"))
 	# 다리
 	var s := 1.0 if frame == 0 else -1.0
 	limb(c, Vector2(-5, -24), Vector2(-5 - 7 * s, -4), 9.0, pants.darkened(0.2))
 	limb(c, Vector2(5, -24), Vector2(5 + 7 * s, -4), 9.0, pants)
 	for fx in [-5 - 7 * s, 5 + 7 * s]:
-		poly(c, PackedVector2Array([Vector2(fx - 6, -6), Vector2(fx + 9, -6), Vector2(fx + 9, 1), Vector2(fx - 6, 1)]), Color("c62828") if female else Color("4e3b2a"), 2.0)
+		poly(c, PackedVector2Array([Vector2(fx - 6, -6), Vector2(fx + 9, -6), Vector2(fx + 9, 1), Vector2(fx - 6, 1)]), Color("4e3b2a"), 2.0)
 	# 몸통
 	poly(c, PackedVector2Array([Vector2(-14, -52), Vector2(14, -52), Vector2(16, -22), Vector2(-16, -22)]), vest)
-	if female:
-		# 치마 단
-		poly(c, PackedVector2Array([Vector2(-16, -30), Vector2(16, -30), Vector2(20, -18), Vector2(-20, -18)]), vest.darkened(0.15), 2.5)
-		c.draw_circle(Vector2(0, -46), 3.0, Color.WHITE)
-	else:
-		c.draw_line(Vector2(-8, -52), Vector2(6, -24), vest.darkened(0.3), 4.0)
-		c.draw_rect(Rect2(-16, -28, 32, 5), Color("5a4630"))
+	c.draw_line(Vector2(-8, -52), Vector2(6, -24), vest.darkened(0.3), 4.0)
+	c.draw_rect(Rect2(-16, -28, 32, 5), Color("5a4630"))
 	# 총 + 팔
 	poly(c, PackedVector2Array([Vector2(4, -44), Vector2(36, -44), Vector2(36, -38), Vector2(16, -38), Vector2(14, -32), Vector2(6, -32)]), Color("37474f"), 2.5)
 	limb(c, Vector2(-2, -46), Vector2(10, -36), 7.0, skin)
 	# 머리
 	circ(c, Vector2(2, -70), 20.0, skin)
-	if female:
-		# 정수리 머리 + 짧은 앞머리 (얼굴을 가리지 않게), 그 위에 눈/볼/입술
-		var top := PackedVector2Array()
-		for i in 13:
-			var a := PI + PI * i / 12.0
-			top.append(Vector2(2 + cos(a) * 22.0, -76 + sin(a) * 17.0))
-		poly(c, top, hair)
-		poly(c, PackedVector2Array([Vector2(-19, -78), Vector2(23, -78), Vector2(19, -73), Vector2(12, -76), Vector2(4, -72), Vector2(-4, -76), Vector2(-12, -73)]), hair, 0.0)
-		c.draw_circle(Vector2(12, -64), 4.0, Color(1, 0.5, 0.5, 0.6))
-		c.draw_circle(Vector2(10, -69), 3.2, OL)
-		c.draw_line(Vector2(8, -72), Vector2(15, -74), OL, 2.0)
-		c.draw_circle(Vector2(15, -60), 2.2, ribbon)
-		return
 	c.draw_circle(Vector2(12, -64), 4.0, Color(1, 0.5, 0.5, 0.55))
 	c.draw_circle(Vector2(10, -70), 3.0, OL)
-	if true:
-		# 검은 앞머리가 모자 아래로 보인다
-		poly(c, PackedVector2Array([Vector2(-16, -76), Vector2(20, -76), Vector2(16, -70), Vector2(10, -73), Vector2(4, -69), Vector2(-4, -73), Vector2(-12, -69)]), hair, 2.0)
-		c.draw_line(Vector2(6, -79), Vector2(14, -78), OL, 2.5)
-		c.draw_line(Vector2(12, -61), Vector2(17, -62), OL, 2.0)
-		# 탐험모
-		poly(c, PackedVector2Array([Vector2(-20, -78), Vector2(-14, -94), Vector2(2, -99), Vector2(18, -94), Vector2(24, -78)]), Color("d8c08a"))
-		poly(c, PackedVector2Array([Vector2(-26, -78), Vector2(30, -78), Vector2(30, -74), Vector2(-26, -74)]), Color("c2a66c"), 2.5)
-		c.draw_line(Vector2(-18, -82), Vector2(22, -82), Color("8d6e3f"), 3.0)
+	# 검은 앞머리가 모자 아래로 보인다
+	poly(c, PackedVector2Array([Vector2(-16, -76), Vector2(20, -76), Vector2(16, -70), Vector2(10, -73), Vector2(4, -69), Vector2(-4, -73), Vector2(-12, -69)]), hair, 2.0)
+	c.draw_line(Vector2(6, -79), Vector2(14, -78), OL, 2.5)
+	c.draw_line(Vector2(12, -61), Vector2(17, -62), OL, 2.0)
+	# 탐험모
+	poly(c, PackedVector2Array([Vector2(-20, -78), Vector2(-14, -94), Vector2(2, -99), Vector2(18, -94), Vector2(24, -78)]), Color("d8c08a"))
+	poly(c, PackedVector2Array([Vector2(-26, -78), Vector2(30, -78), Vector2(30, -74), Vector2(-26, -74)]), Color("c2a66c"), 2.5)
+	c.draw_line(Vector2(-18, -82), Vector2(22, -82), Color("8d6e3f"), 3.0)
+
+
+static func _younghee(c: CanvasItem, frame: int) -> void:
+	var skin := Color("f7d0b0")
+	var hair := Color("6b3e26")
+	var hair_hi := Color("8a5636")
+	var shirt := Color("cdb88a")
+	var shorts := Color("5c6b8a")
+	var pink := Color("f06292")
+	# 뒤로 흐르는 긴 머리 (어깨까지)
+	poly(c, PackedVector2Array([Vector2(-20, -84), Vector2(14, -86), Vector2(16, -60), Vector2(6, -44), Vector2(-10, -40), Vector2(-24, -46), Vector2(-26, -66)]), hair)
+	c.draw_line(Vector2(-18, -70), Vector2(-14, -48), hair_hi, 3.0)
+	# 배낭
+	poly(c, PackedVector2Array([Vector2(-26, -52), Vector2(-12, -54), Vector2(-12, -28), Vector2(-26, -30)]), Color("a0643c"))
+	# 다리 (반바지 + 부츠)
+	var s := 1.0 if frame == 0 else -1.0
+	limb(c, Vector2(-5, -24), Vector2(-5 - 7 * s, -5), 8.0, skin.darkened(0.08))
+	limb(c, Vector2(5, -24), Vector2(5 + 7 * s, -5), 8.0, skin)
+	for fx in [-5 - 7 * s, 5 + 7 * s]:
+		poly(c, PackedVector2Array([Vector2(fx - 6, -12), Vector2(fx + 6, -12), Vector2(fx + 6, -6), Vector2(fx + 10, -6), Vector2(fx + 10, 1), Vector2(fx - 6, 1)]), Color("8d5a3a"), 2.0)
+	poly(c, PackedVector2Array([Vector2(-15, -32), Vector2(15, -32), Vector2(17, -20), Vector2(2, -20), Vector2(0, -24), Vector2(-2, -20), Vector2(-17, -20)]), shorts)
+	# 셔츠 + 벨트
+	poly(c, PackedVector2Array([Vector2(-13, -52), Vector2(13, -52), Vector2(15, -30), Vector2(-15, -30)]), shirt)
+	c.draw_line(Vector2(0, -50), Vector2(0, -32), shirt.darkened(0.25), 2.0)
+	c.draw_rect(Rect2(-15, -33, 30, 4), Color("7a5230"))
+	# 분홍 스카프
+	poly(c, PackedVector2Array([Vector2(-12, -54), Vector2(12, -54), Vector2(8, -47), Vector2(-8, -47)]), pink, 2.0)
+	poly(c, PackedVector2Array([Vector2(-6, -49), Vector2(-14, -38), Vector2(-8, -36), Vector2(-2, -47)]), pink, 2.0)
+	# 총 + 팔
+	poly(c, PackedVector2Array([Vector2(4, -44), Vector2(34, -44), Vector2(34, -38), Vector2(16, -38), Vector2(14, -32), Vector2(6, -32)]), Color("37474f"), 2.5)
+	limb(c, Vector2(-2, -46), Vector2(10, -36), 6.0, skin)
+	# 얼굴
+	circ(c, Vector2(2, -70), 20.0, skin)
+	# 얼굴 옆 머리카락
+	poly(c, PackedVector2Array([Vector2(-18, -80), Vector2(-8, -82), Vector2(-10, -64), Vector2(-16, -54), Vector2(-21, -62)]), hair, 2.0)
+	# 앞머리 (이마만 살짝)
+	poly(c, PackedVector2Array([Vector2(-16, -82), Vector2(22, -82), Vector2(20, -76), Vector2(12, -78), Vector2(6, -75), Vector2(-2, -78), Vector2(-10, -76)]), hair, 2.0)
+	# 큰 눈 + 반짝임 + 속눈썹
+	c.draw_circle(Vector2(11, -68), 5.2, OL)
+	c.draw_circle(Vector2(11, -68), 4.0, Color("3e2723"))
+	c.draw_circle(Vector2(12.5, -69.5), 1.6, Color.WHITE)
+	c.draw_circle(Vector2(9.5, -66.5), 0.8, Color.WHITE)
+	c.draw_line(Vector2(7, -73), Vector2(16, -74.5), OL, 2.0)
+	c.draw_line(Vector2(15, -73.5), Vector2(18, -76), OL, 1.6)
+	# 볼, 입
+	c.draw_circle(Vector2(10, -61), 4.5, Color(1, 0.45, 0.55, 0.45))
+	c.draw_arc(Vector2(16, -61), 3.0, 0.2, PI - 0.2, 8, OL, 1.8)
+	# 탐험모 + 분홍 리본
+	poly(c, PackedVector2Array([Vector2(-18, -82), Vector2(-12, -96), Vector2(3, -101), Vector2(18, -96), Vector2(23, -82)]), Color("e8d4a8"))
+	poly(c, PackedVector2Array([Vector2(-24, -82), Vector2(29, -82), Vector2(29, -78), Vector2(-24, -78)]), Color("d4bc86"), 2.5)
+	c.draw_rect(Rect2(-16, -88, 37, 5), pink)
+	poly(c, PackedVector2Array([Vector2(-14, -86), Vector2(-24, -94), Vector2(-24, -80)]), pink, 2.0)
+	poly(c, PackedVector2Array([Vector2(-14, -86), Vector2(-26, -84), Vector2(-20, -76)]), pink.darkened(0.15), 2.0)
+	c.draw_circle(Vector2(-14, -86), 3.0, Color.WHITE)
 
 
 # ================================================================== 공룡

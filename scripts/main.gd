@@ -146,7 +146,7 @@ func after_title() -> void:
 
 func choose_character(c: String) -> void:
 	character = c
-	voice.pitch = 1.7 if c == "f" else 1.4  # 캐릭터별 목소리 높이 (Web Speech pitch 0~2)
+	voice.gender = c
 	save_game()
 	dlog("character: %s" % c)
 
@@ -398,7 +398,7 @@ func _load() -> void:
 			equipped = "jeep"
 		voice.tts_enabled = bool(cfg.get_value("save", "voice", true))
 		character = str(cfg.get_value("save", "character", ""))
-	voice.pitch = 1.7 if character == "f" else 1.4
+	voice.gender = "f" if character == "f" else "m"
 	selected_stage = unlocked
 
 
