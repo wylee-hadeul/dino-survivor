@@ -245,7 +245,7 @@ func _draw() -> void:
 	if dead:
 		sp.draw(self, "shadow", pos, 0, false, 0.8)
 		draw_set_transform(pos, -PI * 0.5 * face, Vector2.ONE)
-		sp.draw(self, "player", Vector2(0, 0), 0, face < 0.0, 1.0, Color(0.8, 0.8, 0.8))
+		sp.draw(self, run.main.player_sprite(), Vector2(0, 0), 0, face < 0.0, 1.0, Color(0.8, 0.8, 0.8))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 		return
 	if vehicle != "":
@@ -277,7 +277,7 @@ func _draw() -> void:
 		return
 	sp.draw(self, "shadow", pos, 0, false, 0.7)
 	var frame := int(anim) % 2 if move_dir.length() > 0.05 else 0
-	sp.draw(self, "player", pos + Vector2(0, -abs(sin(anim)) * 3.0 if move_dir.length() > 0.05 else 0.0), frame, face < 0.0, 0.85, mod)
+	sp.draw(self, run.main.player_sprite(), pos + Vector2(0, -abs(sin(anim)) * 3.0 if move_dir.length() > 0.05 else 0.0), frame, face < 0.0, 0.85, mod)
 	# 체력바
 	var w := 56.0
 	draw_rect(Rect2(pos.x - w * 0.5, pos.y + 10, w, 8), Color(0, 0, 0, 0.6))

@@ -10,6 +10,7 @@ const PAD := 4
 ## [이름, 폭, 높이, 앵커("foot"=발밑 / "center"), 프레임 수, 좌우반전본 생성]
 const SPECS := [
 	["player", 84, 104, "foot", 2, true],
+	["player_f", 96, 104, "foot", 2, true],
 	["compy", 76, 56, "foot", 2, true],
 	["raptor", 116, 84, "foot", 2, true],
 	["dilo", 104, 94, "foot", 2, true],
@@ -117,6 +118,7 @@ func paint(c: CanvasItem, name: String, frame: int) -> void:
 		return
 	match name:
 		"player": Art.player(c, frame)
+		"player_f": Art.player_f(c, frame)
 		"compy": Art.compy(c, frame)
 		"raptor": Art.raptor(c, frame)
 		"dilo": Art.dilo(c, frame)

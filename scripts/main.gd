@@ -11,7 +11,7 @@ const SfxScript = preload("res://scripts/sfx.gd")
 const VoiceScript = preload("res://scripts/voice.gd")
 const AutoplayScript = preload("res://scripts/autoplay.gd")
 
-enum State { BOOT, TITLE, LOBBY, TALENT, GARAGE, PLAYING, LEVELUP, PAUSE, RESULT }
+enum State { BOOT, TITLE, CHARSELECT, LOBBY, TALENT, GARAGE, PLAYING, LEVELUP, PAUSE, RESULT }
 
 var save_path := "user://save.cfg"
 var state := State.BOOT
@@ -36,6 +36,7 @@ var best := {}
 var vehicle_lv := {}
 var equipped := "jeep"
 var owned_vehicles: Array = ["jeep"]
+var character := ""   # "m" 남자 / "f" 여자. 비어 있으면 처음 시작 시 선택 화면
 
 var selected_stage := 1
 var choices: Array = []
@@ -128,6 +129,26 @@ func try_fullscreen(is_touch: bool) -> void:
 	if not is_touch or not OS.has_feature("web"):
 		return
 	JavaScriptBridge.eval("(function(){var d=document.documentElement;if(d.requestFullscreen){d.requestFullscreen().catch(function(){});}})();", true)
+
+
+## 주인공 스프라이트 이름
+func player_sprite() -> String:
+	return "player_f" if character == "f" else "player"
+
+
+## 타이틀 다음: 캐릭터를 아직 고르지 않았으면 선택 화면으로
+func after_title() -> void:
+	if character == "":
+		set_state(State.CHARSELECT)
+	else:
+		goto_lobby()
+
+
+func choose_character(c: String) -> void:
+	character = c
+	voice.pitch = 0.85 if c == "f" else 1.4  # 남자는 높게, 여자는 낮게
+	save_game()
+	dlog("character: %s" % c)
 
 
 func set_state(s: State) -> void:
@@ -376,6 +397,8 @@ func _load() -> void:
 		if not owned_vehicles.has(equipped):
 			equipped = "jeep"
 		voice.tts_enabled = bool(cfg.get_value("save", "voice", true))
+		character = str(cfg.get_value("save", "character", ""))
+	voice.pitch = 0.85 if character == "f" else 1.4
 	selected_stage = unlocked
 
 
@@ -390,4 +413,5 @@ func save_game() -> void:
 	cfg.set_value("save", "equipped", equipped)
 	cfg.set_value("save", "owned_vehicles", owned_vehicles)
 	cfg.set_value("save", "voice", voice.tts_enabled)
+	cfg.set_value("save", "character", character)
 	cfg.save(save_path)

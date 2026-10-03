@@ -62,6 +62,8 @@ func configure(args: PackedStringArray) -> void:
 			ride_full = true
 		elif a == "--chaseboss":
 			chase_boss = true
+		elif a.begins_with("--char="):
+			main.choose_character(a.substr(7))
 		elif a == "--god":
 			god = true
 	main.voice.tts_enabled = false  # 테스트 중엔 음성을 끈다
@@ -81,7 +83,14 @@ func _process(delta: float) -> void:
 		S.TITLE:
 			if wait_t > 1.0:
 				_shot("title")
-				main.goto_lobby()
+				main.after_title()
+				wait_t = 0.0
+		S.CHARSELECT:
+			if wait_t > 0.6 and main.character == "":
+				main.menu.activate("char:" + ("f" if randf() < 0.5 else "m"))
+			elif wait_t > 1.4:
+				_shot("charselect")
+				main.menu.activate("char_ok")
 				wait_t = 0.0
 		S.LOBBY:
 			_shot("lobby")

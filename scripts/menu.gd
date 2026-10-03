@@ -24,7 +24,7 @@ func open() -> void:
 
 
 func active() -> bool:
-	return main.state in [main.State.TITLE, main.State.LOBBY, main.State.TALENT, main.State.GARAGE, main.State.RESULT]
+	return main.state in [main.State.TITLE, main.State.CHARSELECT, main.State.LOBBY, main.State.TALENT, main.State.GARAGE, main.State.RESULT]
 
 
 func show_toast(s: String) -> void:
@@ -45,6 +45,13 @@ func layout() -> Array:
 	var cx := v.x * 0.5
 	var out: Array = []
 	match main.state:
+		main.State.CHARSELECT:
+			var cw: float = min(320.0, (v.x - 60.0) * 0.5)
+			var ch := 470.0
+			var y := 300.0
+			out.append({"id": "char:m", "rect": Rect2(cx - cw - 10, y, cw, ch), "kind": "char", "c": "m", "enabled": true})
+			out.append({"id": "char:f", "rect": Rect2(cx + 10, y, cw, ch), "kind": "char", "c": "f", "enabled": true})
+			out.append({"id": "char_ok", "rect": Rect2(cx - 230, y + ch + 50, 460, 120), "label": "이 캐릭터로 시작!", "col": GREEN, "size": 44, "enabled": main.character != ""})
 		main.State.LOBBY:
 			var p := _stage_panel()
 			out.append({"id": "prev", "rect": Rect2(p.position.x - 30, p.get_center().y - 50, 70, 100), "kind": "arrow", "dir": -1, "enabled": main.selected_stage > 1})
@@ -55,6 +62,7 @@ func layout() -> Array:
 			out.append({"id": "talent", "rect": Rect2(cx - bw * 1.5 - 12, by, bw, 104), "label": "강화", "col": ORANGE, "enabled": true})
 			out.append({"id": "garage", "rect": Rect2(cx - bw * 0.5, by, bw, 104), "label": "차고", "col": BLUE, "enabled": true})
 			out.append({"id": "voice", "rect": Rect2(cx + bw * 0.5 + 12, by, bw, 104), "label": "음성 켜짐" if main.voice.tts_enabled else "음성 꺼짐", "col": GREY, "size": 30, "enabled": true})
+			out.append({"id": "charsel", "rect": Rect2(cx - 290, 380, 150, 64), "label": "캐릭터", "col": Color("8e24aa"), "size": 28, "enabled": true})
 		main.State.TALENT:
 			out.append({"id": "back", "rect": Rect2(24, 40, 150, 72), "label": "뒤로", "col": GREY, "enabled": true})
 			var cols := 3
@@ -105,7 +113,7 @@ func _input(event: InputEvent) -> void:
 	if main.state == main.State.TITLE:
 		if (event is InputEventScreenTouch and event.pressed) or (event is InputEventKey and event.pressed and not event.echo):
 			main.try_fullscreen(event is InputEventScreenTouch)
-			main.goto_lobby()
+			main.after_title()
 			get_viewport().set_input_as_handled()
 		return
 	var btns := layout()
@@ -174,12 +182,19 @@ func activate(id: String) -> void:
 				main.voice.speak("음성을 켰어요!")
 		"back", "lobby":
 			main.goto_lobby()
+		"charsel":
+			main.set_state(main.State.CHARSELECT)
+		"char_ok":
+			main.goto_lobby()
 		"next_stage":
 			main.start_run(main.result.stage + 1)
 		"retry":
 			main.start_run(main.result.stage)
 		_:
-			if id.begins_with("buy:"):
+			if id.begins_with("char:"):
+				main.choose_character(id.substr(5))
+				main.voice.say("start", true)
+			elif id.begins_with("buy:"):
 				var r: String = main.buy_talent(id.substr(4))
 				show_toast(r)
 			elif id.begins_with("equip:"):
@@ -209,6 +224,8 @@ func _draw() -> void:
 	match main.state:
 		main.State.TITLE:
 			_draw_title(v)
+		main.State.CHARSELECT:
+			_draw_charselect(v)
 		main.State.LOBBY:
 			_draw_lobby(v)
 		main.State.TALENT:
@@ -227,6 +244,8 @@ func _draw() -> void:
 				draw_colored_polygon(PackedVector2Array([c + Vector2(b.dir * 22, 0), c + Vector2(-b.dir * 16, -30), c + Vector2(-b.dir * 16, 30)]), Color(1, 1, 1, a))
 			"talent":
 				_talent_card(b, i == focus)
+			"char":
+				_char_card(b)
 			"vehicle":
 				_vehicle_card(b)
 			_:
@@ -270,12 +289,43 @@ func _draw_title(v: Vector2) -> void:
 	_t(Vector2(v.x * 0.5, v.y * 0.24 + bob), "공룡섬", 120, Color("8bff6b"), HORIZONTAL_ALIGNMENT_CENTER, 16)
 	_t(Vector2(v.x * 0.5, v.y * 0.24 + 110 + bob), "생존기", 96, Color("ffcf4a"), HORIZONTAL_ALIGNMENT_CENTER, 14)
 	main.sprites.draw(self, "shadow", Vector2(v.x * 0.5, v.y * 0.6), 0, false, 2.0)
-	main.sprites.draw(self, "player", Vector2(v.x * 0.5, v.y * 0.6 - abs(sin(main.time * 3.0)) * 10.0), int(main.time * 3.0) % 2, false, 2.4)
+	main.sprites.draw(self, main.player_sprite(), Vector2(v.x * 0.5, v.y * 0.6 - abs(sin(main.time * 3.0)) * 10.0), int(main.time * 3.0) % 2, false, 2.4)
 	main.sprites.draw(self, "raptor", Vector2(v.x * 0.5 - 220, v.y * 0.62), int(main.time * 4.0) % 2, false, 1.6)
 	main.sprites.draw(self, "compy", Vector2(v.x * 0.5 + 220, v.y * 0.62), int(main.time * 5.0) % 2, true, 1.8)
 	var blink := 0.55 + sin(main.time * 5.0) * 0.45
 	_t(Vector2(v.x * 0.5, v.y * 0.76), "화면을 터치해서 시작", 44, Color(1, 1, 1, blink))
 	_t(Vector2(v.x * 0.5, v.y * 0.82), "드래그로 이동, 무기는 자동 공격!", 28, Color(1, 1, 1, 0.8), HORIZONTAL_ALIGNMENT_CENTER, 5)
+
+
+const CHAR_INFO := {
+	"m": {"name": "민준", "desc": "씩씩한 남자 탐험가", "col": Color("6b7d3a")},
+	"f": {"name": "서연", "desc": "용감한 여자 탐험가", "col": Color("3f8f7f")},
+}
+
+
+func _draw_charselect(v: Vector2) -> void:
+	draw_rect(Rect2(Vector2.ZERO, v), Color(0, 0, 0, 0.45))
+	_t(Vector2(v.x * 0.5, 170), "캐릭터를 선택하세요", 56, Color("ffcf4a"), HORIZONTAL_ALIGNMENT_CENTER, 12)
+	_t(Vector2(v.x * 0.5, 230), "능력은 같고 모습과 목소리가 달라요", 26, Color(1, 1, 1, 0.8), HORIZONTAL_ALIGNMENT_CENTER, 5)
+
+
+func _char_card(b: Dictionary) -> void:
+	var c: String = b.c
+	var info: Dictionary = CHAR_INFO[c]
+	var r: Rect2 = b.rect
+	var sel: bool = main.character == c
+	if sel:
+		r = r.grow(6.0 + sin(main.time * 6.0) * 2.0)
+	_panel(r, Color("ffcf4a") if sel else info.col, Color(0.1, 0.12, 0.11, 0.92) if not sel else Color(0.16, 0.2, 0.14, 0.95))
+	var cx := r.get_center().x
+	var sprite := "player_f" if c == "f" else "player"
+	var bob: float = abs(sin(main.time * (4.0 if sel else 2.0))) * (12.0 if sel else 4.0)
+	main.sprites.draw(self, "shadow", Vector2(cx, r.position.y + 300), 0, false, 1.6)
+	main.sprites.draw(self, sprite, Vector2(cx, r.position.y + 300 - bob), int(main.time * 4.0) % 2 if sel else 0, false, 2.3)
+	_t(Vector2(cx, r.position.y + 380), info.name, 48, Color.WHITE)
+	_t(Vector2(cx, r.position.y + 428), info.desc, 24, Color(0.85, 0.85, 0.85), HORIZONTAL_ALIGNMENT_CENTER, 0)
+	if sel:
+		_t(Vector2(cx, r.position.y + 50), "선택됨", 30, Color("ffcf4a"))
 
 
 func _draw_lobby(v: Vector2) -> void:
@@ -284,7 +334,7 @@ func _draw_lobby(v: Vector2) -> void:
 	# 주인공
 	var px := v.x * 0.5
 	main.sprites.draw(self, "shadow", Vector2(px, 430), 0, false, 1.6)
-	main.sprites.draw(self, "player", Vector2(px, 430 - abs(sin(main.time * 2.0)) * 6.0), 0, false, 2.0)
+	main.sprites.draw(self, main.player_sprite(), Vector2(px, 430 - abs(sin(main.time * 2.0)) * 6.0), 0, false, 2.0)
 	var vid: String = main.equipped
 	main.sprites.draw(self, vid, Vector2(px + 190, 430), 0, true, 0.9)
 	_t(Vector2(px + 190, 460), Data.vehicle(vid).name, 24, Color(1, 1, 1, 0.8), HORIZONTAL_ALIGNMENT_CENTER, 5)

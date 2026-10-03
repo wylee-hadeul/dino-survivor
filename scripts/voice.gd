@@ -5,6 +5,7 @@ extends Node
 const Data = preload("res://scripts/data.gd")
 
 var tts_enabled := true
+var pitch := 1.4  # 캐릭터별 목소리 높이 (남자 높게 / 여자 낮게)
 var bubble := ""
 var bubble_t := 0.0
 var cool := 0.0       # 말풍선 간격
@@ -51,14 +52,14 @@ func speak(text: String) -> void:
 	if OS.has_feature("web"):
 		var js := """
 			(function(t){try{var s=window.speechSynthesis;if(!s)return;
-			var u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=1.1;u.pitch=1.15;
+			var u=new SpeechSynthesisUtterance(t);u.lang='ko-KR';u.rate=1.1;u.pitch=%s;
 			var vs=s.getVoices();for(var i=0;i<vs.length;i++){if(vs[i].lang&&vs[i].lang.toLowerCase().indexOf('ko')==0){u.voice=vs[i];break;}}
 			s.cancel();s.speak(u);}catch(e){}})(%s);
-		""" % JSON.stringify(text)
+		""" % [str(pitch), JSON.stringify(text)]
 		JavaScriptBridge.eval(js, true)
 		return
 	var voices := DisplayServer.tts_get_voices_for_language("ko")
 	if voices.is_empty():
 		return
 	DisplayServer.tts_stop()
-	DisplayServer.tts_speak(text, voices[0], 80, 1.1, 1.1)
+	DisplayServer.tts_speak(text, voices[0], 80, pitch, 1.1)
