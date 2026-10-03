@@ -26,6 +26,7 @@ var camera: Camera2D
 var stage := 1
 var t := 0.0
 var kills := 0
+var kill_counts := {}  # 종류별 처치 수 (로그/검수용)
 var run_gold := 0
 var pending_levelups := 0
 var chest_levelups := 0
@@ -65,6 +66,7 @@ func start(s: int, talents: Dictionary, veh_id: String, veh_lv: int) -> void:
 	stage = s
 	t = 0.0
 	kills = 0
+	kill_counts = {}
 	run_gold = 0
 	pending_levelups = 0
 	chest_levelups = 0
@@ -226,6 +228,7 @@ func _swarm(kind: String) -> void:
 
 func on_enemy_killed(e) -> void:
 	kills += 1
+	kill_counts[e.kind] = kill_counts.get(e.kind, 0) + 1
 	player.add_ride(1)
 	if e.boss:
 		fx.explosion(e.pos, 2.0, Color(1, 0.6, 0.3))

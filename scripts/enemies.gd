@@ -159,8 +159,8 @@ func random_near(pos: Vector2, max_dist: float) -> E:
 func damage(e: E, amount: float, knock_dir := Vector2.ZERO, knock := 0.0) -> void:
 	if e.dead:
 		return
-	if e.alt > 40.0:
-		return  # 높이 뛰어오른 보스는 맞지 않는다
+	if e.boss and e.alt > 40.0:
+		return  # 점프 낙하 중인 보스만 맞지 않는다 (비행 공룡은 맞는다)
 	amount *= 1.0 - e.armor * 0.6
 	e.hp -= amount
 	e.flash = 0.1
@@ -263,7 +263,7 @@ func _enemy_update(e: E, delta: float, dir: Vector2, dist: float) -> void:
 		return
 	if e.fly:
 		e.vel = dir * e.speed + dir.orthogonal() * sin(e.anim * 0.5) * 80.0
-		e.alt = 50.0
+		e.alt = 32.0  # 낮게 날아 총알이 맞는 위치와 보이는 위치가 크게 어긋나지 않게
 		return
 	e.vel = dir * e.speed
 
