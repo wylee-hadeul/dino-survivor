@@ -55,6 +55,8 @@ func configure(args: PackedStringArray) -> void:
 			skip_to = float(a.substr(9))
 		elif a.begins_with("--vehicle="):
 			force_vehicle = a.substr(10)
+			if not main.owned_vehicles.has(force_vehicle):
+				main.owned_vehicles.append(force_vehicle)
 			main.equipped = force_vehicle
 		elif a == "--ridefull":
 			ride_full = true
@@ -85,7 +87,9 @@ func _process(delta: float) -> void:
 			_shot("lobby")
 			if wait_t > 0.8:
 				wait_t = 0.0
-				if _cheapest_talent() != "":
+				if _buyable_vehicle() != "":
+					main.menu.activate("garage")
+				elif _cheapest_talent() != "":
 					main.menu.activate("talent")
 				elif _garage_todo():
 					main.menu.activate("garage")
@@ -107,7 +111,10 @@ func _process(delta: float) -> void:
 			if wait_t > 0.5:
 				wait_t = 0.0
 				var best_v := _best_vehicle()
-				if main.equipped != best_v:
+				var buy := _buyable_vehicle()
+				if buy != "":
+					main.menu.activate("vbuy:" + buy)
+				elif main.equipped != best_v:
 					main.menu.activate("equip:" + best_v)
 				elif int(main.vehicle_lv.get(best_v, 0)) < 5 and main.gold >= Data.vehicle_cost(int(main.vehicle_lv.get(best_v, 0))) and main.gold > 300:
 					main.menu.activate("vup:" + best_v)
@@ -253,12 +260,22 @@ func _best_vehicle() -> String:
 		return force_vehicle
 	var b := "jeep"
 	for v in Data.VEHICLES:
-		if main.cleared >= v.unlock:
+		if main.owned_vehicles.has(v.id):
 			b = v.id
 	return b
 
 
+## 다음으로 살 탈것 (살 수 있으면)
+func _buyable_vehicle() -> String:
+	for v in Data.VEHICLES:
+		if not main.owned_vehicles.has(v.id):
+			return v.id if main.gold >= v.price else ""
+	return ""
+
+
 func _garage_todo() -> bool:
+	if _buyable_vehicle() != "":
+		return true
 	var bv := _best_vehicle()
 	if main.equipped != bv:
 		return true

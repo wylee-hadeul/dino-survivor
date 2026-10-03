@@ -35,6 +35,7 @@ var cleared := 0
 var best := {}
 var vehicle_lv := {}
 var equipped := "jeep"
+var owned_vehicles: Array = ["jeep"]
 
 var selected_stage := 1
 var choices: Array = []
@@ -196,6 +197,22 @@ func buy_talent(id: String) -> String:
 	return "%s Lv%d 강화 완료!" % [tl.name, lv + 1]
 
 
+func buy_vehicle(id: String) -> String:
+	if owned_vehicles.has(id):
+		return "이미 보유 중입니다"
+	var v := Data.vehicle(id)
+	if gold < v.price:
+		sfx.play("hurt", -10.0)
+		return "골드가 부족합니다"
+	gold -= v.price
+	owned_vehicles.append(id)
+	equipped = id
+	save_game()
+	sfx.play("levelup", -4.0, 0.8)
+	dlog("vehicle bought: %s (cost %d, left %d)" % [id, v.price, gold])
+	return "%s 구매 완료! 장착했습니다" % v.name
+
+
 func upgrade_vehicle(id: String) -> String:
 	var lv: int = vehicle_lv.get(id, 0)
 	if lv >= 5:
@@ -221,12 +238,8 @@ func on_run_finished(was_cleared: bool) -> void:
 	gold += earned
 	var unlock := ""
 	if was_cleared:
-		var prev := cleared
 		cleared = max(cleared, s)
 		unlocked = max(unlocked, s + 1)
-		for v in Data.VEHICLES:
-			if v.unlock > prev and v.unlock <= cleared:
-				unlock = v.name
 	best[str(s)] = max(float(best.get(str(s), 0.0)), run.t)
 	result = {"cleared": was_cleared, "stage": s, "time": run.t, "kills": run.kills, "level": run.player.level, "gold": earned, "bonus": bonus, "unlock": unlock}
 	save_game()
@@ -359,6 +372,9 @@ func _load() -> void:
 		best = cfg.get_value("save", "best", {})
 		vehicle_lv = cfg.get_value("save", "vehicle_lv", {})
 		equipped = str(cfg.get_value("save", "equipped", "jeep"))
+		owned_vehicles = cfg.get_value("save", "owned_vehicles", ["jeep"])
+		if not owned_vehicles.has(equipped):
+			equipped = "jeep"
 		voice.tts_enabled = bool(cfg.get_value("save", "voice", true))
 	selected_stage = unlocked
 
@@ -372,5 +388,6 @@ func save_game() -> void:
 	cfg.set_value("save", "best", best)
 	cfg.set_value("save", "vehicle_lv", vehicle_lv)
 	cfg.set_value("save", "equipped", equipped)
+	cfg.set_value("save", "owned_vehicles", owned_vehicles)
 	cfg.set_value("save", "voice", voice.tts_enabled)
 	cfg.save(save_path)

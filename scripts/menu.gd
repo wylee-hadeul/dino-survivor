@@ -72,7 +72,9 @@ func layout() -> Array:
 				var vh: Dictionary = Data.VEHICLES[i]
 				var r := Rect2(cx - w * 0.5, 190.0 + i * 236.0, w, 216)
 				out.append({"id": "card:" + vh.id, "rect": r, "kind": "vehicle", "v": vh, "enabled": false})
-				if main.cleared >= vh.unlock:
+				if not main.owned_vehicles.has(vh.id):
+					out.append({"id": "vbuy:" + vh.id, "rect": Rect2(r.end.x - 200, r.position.y + 72, 176, 76), "label": "구매", "col": ORANGE, "size": 32, "enabled": true})
+				else:
 					var equipped: bool = main.equipped == vh.id
 					out.append({"id": "equip:" + vh.id, "rect": Rect2(r.end.x - 200, r.position.y + 30, 176, 72), "label": "장착 중" if equipped else "장착", "col": GREEN if not equipped else GREY, "size": 30, "enabled": not equipped})
 					var lv: int = main.vehicle_lv.get(vh.id, 0)
@@ -184,6 +186,8 @@ func activate(id: String) -> void:
 				main.equipped = id.substr(6)
 				main.save_game()
 				show_toast("%s 장착!" % Data.vehicle(main.equipped).name)
+			elif id.begins_with("vbuy:"):
+				show_toast(main.buy_vehicle(id.substr(5)))
 			elif id.begins_with("vup:"):
 				show_toast(main.upgrade_vehicle(id.substr(4)))
 
@@ -343,13 +347,13 @@ func _draw_garage(v: Vector2) -> void:
 	draw_rect(Rect2(Vector2.ZERO, v), Color(0, 0, 0, 0.55))
 	_t(Vector2(v.x * 0.5, 104), "차고", 58, Color("90caf9"), HORIZONTAL_ALIGNMENT_CENTER, 12)
 	_gold(v.x - 30, 92)
-	_t(Vector2(v.x * 0.5, 160), "처치로 게이지를 채우고 탑승 버튼을 누르세요", 22, Color(1, 1, 1, 0.75), HORIZONTAL_ALIGNMENT_CENTER, 0)
+	_t(Vector2(v.x * 0.5, 160), "골드로 탈것을 사고 강화하세요. 게임 중 게이지가 차면 탑승!", 22, Color(1, 1, 1, 0.75), HORIZONTAL_ALIGNMENT_CENTER, 0)
 
 
 func _vehicle_card(b: Dictionary) -> void:
 	var vh: Dictionary = b.v
 	var r: Rect2 = b.rect
-	var unlocked: bool = main.cleared >= vh.unlock
+	var unlocked: bool = main.owned_vehicles.has(vh.id)
 	var equipped: bool = main.equipped == vh.id
 	_panel(r, Color("ffcf4a") if equipped else (vh.col if unlocked else Color(0.3, 0.3, 0.3)), Color(0.1, 0.12, 0.11, 0.95))
 	var sz: Vector2 = main.sprites.size_of(vh.id)
@@ -365,7 +369,9 @@ func _vehicle_card(b: Dictionary) -> void:
 	if unlocked:
 		_t(Vector2(r.position.x + 220, r.position.y + 180), "탑승 %.0f초  /  위력 x%.1f" % [vh.time * (1.0 + 0.15 * lv), 1.0 + 0.2 * lv], 20, Color(0.7, 0.9, 1.0), HORIZONTAL_ALIGNMENT_LEFT, 0)
 	else:
-		_t(Vector2(r.position.x + 220, r.position.y + 180), "스테이지 %d 클리어 시 해금" % vh.unlock, 24, Color("ff8a80"), HORIZONTAL_ALIGNMENT_LEFT, 0)
+		var afford: bool = main.gold >= vh.price
+		main.sprites.draw(self, "coin", Vector2(r.position.x + 234, r.position.y + 172), 0, false, 1.2)
+		_t(Vector2(r.position.x + 254, r.position.y + 182), "%d 골드" % vh.price, 28, COIN if afford else Color("ff6e6e"), HORIZONTAL_ALIGNMENT_LEFT, 4)
 
 
 func _draw_result(v: Vector2) -> void:
