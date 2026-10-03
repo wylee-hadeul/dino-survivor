@@ -114,7 +114,12 @@ func _rebuild_grid() -> void:
 			grid[k] = [e]
 
 
-## pos에서 radius 안에 있는 공룡 (몸 반경 포함)
+## 명중 판정 기준점: 발밑이 아니라 몸통 중심 (총알은 몸 높이로 날아간다)
+static func body(e) -> Vector2:
+	return e.pos - Vector2(0, e.r * 0.9 + e.alt)
+
+
+## pos에서 radius 안에 있는 공룡 (몸 반경 포함, 몸통 중심 기준)
 func query(pos: Vector2, radius: float) -> Array:
 	var out: Array = []
 	var reach := radius + 80.0
@@ -126,7 +131,7 @@ func query(pos: Vector2, radius: float) -> Array:
 			if cell == null:
 				continue
 			for e in cell:
-				if not e.dead and e.pos.distance_squared_to(pos) <= (radius + e.r) * (radius + e.r):
+				if not e.dead and body(e).distance_squared_to(pos) <= (radius + e.r) * (radius + e.r):
 					out.append(e)
 	return out
 

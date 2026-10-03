@@ -33,6 +33,8 @@ var bolts: Array = []   # {pts, t}
 var flames: Array = []  # 화염 시각 효과 {pos, vel, t, life, s}
 var saw_angle := 0.0
 var bomb_t := 0.0
+var fired := {}  # 검수용: 투사체 종류별 발사 수
+var landed := {}  # 검수용: 한 번 이상 명중한 투사체 수
 
 
 func clear() -> void:
@@ -49,7 +51,7 @@ static func stats(id: String, lv: int) -> Dictionary:
 		"pistol":
 			return {"dmg": [14.0, 18.2, 18.2, 18.2, 23.7][i], "count": [1, 1, 2, 2, 2][i], "cd": [0.55, 0.55, 0.55, 0.42, 0.42][i], "pierce": [0, 0, 0, 0, 1][i]}
 		"shotgun":
-			return {"dmg": [7.0, 7.0, 9.1, 9.1, 9.1][i], "count": [5, 7, 7, 7, 9][i], "cd": [1.5, 1.5, 1.5, 1.12, 1.12][i], "life": [0.32, 0.32, 0.32, 0.32, 0.42][i]}
+			return {"dmg": [7.0, 7.0, 9.1, 9.1, 9.1][i], "count": [5, 7, 7, 7, 9][i], "cd": [1.5, 1.5, 1.5, 1.12, 1.12][i], "life": [0.46, 0.46, 0.46, 0.46, 0.56][i]}
 		"grenade":
 			return {"dmg": [30.0, 30.0, 30.0, 42.0, 42.0][i], "radius": [70.0, 84.0, 84.0, 84.0, 84.0][i], "count": [1, 1, 2, 2, 3][i], "cd": [2.4, 2.4, 2.4, 2.4, 1.8][i]}
 		"saw":
@@ -65,11 +67,14 @@ static func stats(id: String, lv: int) -> Dictionary:
 	return {}
 
 
-func _aim(range_: float) -> Vector2:
+## origin(총구)에서 가장 가까운 공룡의 몸통 중심을 향하는 방향
+func _aim(range_: float, origin := Vector2.INF) -> Vector2:
 	var pl = run.player
+	if origin == Vector2.INF:
+		origin = pl.pos + Vector2(0, -40)
 	var e = run.enemies.nearest(pl.pos, range_)
 	if e:
-		return (e.pos - pl.pos).normalized()
+		return (run.enemies.body(e) - origin).normalized()
 	return pl.facing_dir()
 
 
@@ -83,6 +88,7 @@ func _shoot(sprite: String, pos: Vector2, vel: Vector2, dmg: float, r: float, li
 	p.life = life
 	p.pierce = pierce
 	projs.append(p)
+	fired[sprite] = fired.get(sprite, 0) + 1
 	return p
 
 
@@ -104,9 +110,11 @@ func update(delta: float) -> void:
 						_shoot("bullet", muzzle + off, d * 720.0, s.dmg * might, 8.0, 0.9, s.pierce)
 					run.sfx.play("shoot", -12.0)
 			"shotgun":
-				if w.cd <= 0.0 and run.enemies.nearest(pl.pos, 300.0):
+				# 산탄이 실제로 닿는 거리(속도 x 수명) 안에 공룡이 있을 때만 쏜다
+				var reach: float = 650.0 * s.life
+				if w.cd <= 0.0 and run.enemies.nearest(pl.pos, reach):
 					w.cd = s.cd * cdm
-					var d := _aim(300.0)
+					var d := _aim(reach)
 					for k in s.count:
 						var ang: float = (k - (s.count - 1) * 0.5) * 0.12 + randf_range(-0.04, 0.04)
 						_shoot("pellet", muzzle, d.rotated(ang) * randf_range(620.0, 760.0), s.dmg * might, 8.0, s.life, 0)
@@ -214,8 +222,9 @@ func _beam(a: Vector2, d: Vector2, length: float, w: float, dmg: float, col: Col
 	beams.append({"a": a, "b": b, "w": w, "t": 0.0, "life": 0.28, "col": col})
 	var mid := a + d * length * 0.5
 	for e in run.enemies.query(mid, length * 0.5 + 40.0):
-		var q := Geometry2D.get_closest_point_to_segment(e.pos, a, b)
-		if q.distance_to(e.pos) < w + e.r:
+		var c: Vector2 = run.enemies.body(e)
+		var q := Geometry2D.get_closest_point_to_segment(c, a, b)
+		if q.distance_to(c) < w + e.r:
 			run.enemies.damage(e, dmg, d, 60.0)
 
 
@@ -260,6 +269,8 @@ func _update_projs(delta: float) -> void:
 				p.dead = true
 				_explode(p.pos, p.aoe, p.dmg)
 				break
+			if p.hits.is_empty():
+				landed[p.sprite] = landed.get(p.sprite, 0) + 1
 			p.hits.append(e)
 			run.enemies.damage(e, p.dmg, p.vel.normalized(), p.knock)
 			if p.pierce <= 0:
@@ -286,16 +297,16 @@ func _vehicle_update(delta: float, might: float) -> void:
 		"jeep":
 			if wv.cd <= 0.0 and run.enemies.nearest(pl.pos, 520.0):
 				wv.cd = 0.08
-				var d := _aim(520.0).rotated(randf_range(-0.08, 0.08))
+				var d := _aim(520.0, pl.pos + Vector2(0, -50)).rotated(randf_range(-0.06, 0.06))
 				_shoot("bullet", pl.pos + Vector2(0, -50), d * 900.0, 10.0 * vm, 8.0, 0.7, 1)
 				run.sfx.play("shoot", -16.0, 1.3)
 			_crush(60.0, 40.0 * vm, 380.0)
 		"tank":
 			if wv.cd <= 0.0 and run.enemies.nearest(pl.pos, 600.0):
 				wv.cd = 0.6
-				var d := _aim(600.0)
+				var d := _aim(600.0, pl.pos + Vector2(0, -66))
 				pl.turret_angle = d.angle()
-				var p := _shoot("shell", pl.pos + Vector2(0, -40) + d * 60.0, d * 700.0, 60.0 * vm, 14.0, 1.0)
+				var p := _shoot("shell", pl.pos + Vector2(0, -66) + d * 60.0, d * 700.0, 60.0 * vm, 14.0, 1.0)
 				p.aoe = 95.0
 				p.scale = 1.4
 				run.sfx.play("shotgun", -4.0, 0.6)
@@ -323,7 +334,7 @@ func _vehicle_update(delta: float, might: float) -> void:
 				p.aoe = 75.0
 			if wv.cd <= 0.0 and run.enemies.nearest(pl.pos, 600.0):
 				wv.cd = 0.1
-				var d := _aim(600.0)
+				var d := _aim(600.0, pl.pos + Vector2(0, -90))
 				for o in [-14.0, 14.0]:
 					_shoot("bullet", pl.pos + Vector2(0, -90) + d.orthogonal() * o, d * 950.0, 12.0 * vm, 8.0, 0.7)
 

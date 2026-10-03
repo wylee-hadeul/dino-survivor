@@ -153,6 +153,7 @@ func _process(delta: float) -> void:
 		_screenshot("")
 	if elapsed >= duration:
 		main.dlog("kill counts: %s" % main.run.kill_counts)
+		main.dlog("projectiles fired=%s landed=%s" % [main.run.weapons.fired, main.run.weapons.landed])
 		main.dlog("autoplay done: gold=%d cleared=%d talents=%s vehicles=%s" % [main.gold, main.cleared, main.talents, main.vehicle_lv])
 		get_tree().quit()
 
