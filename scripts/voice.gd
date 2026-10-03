@@ -5,7 +5,7 @@ extends Node
 const Data = preload("res://scripts/data.gd")
 
 var tts_enabled := true
-var pitch := 1.4  # 캐릭터별 목소리 높이 (남자 높게 / 여자 낮게)
+var pitch := 1.4  # 캐릭터별 목소리 높이 (남자 1.4 / 여자 1.7)
 var bubble := ""
 var bubble_t := 0.0
 var cool := 0.0       # 말풍선 간격
