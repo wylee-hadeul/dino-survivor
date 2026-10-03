@@ -153,7 +153,7 @@ const VEHICLES := [
 	{"id": "jeep", "name": "지프", "price": 0, "desc": "빠르게 달리며 들이받고\n기관총을 난사한다", "time": 12.0, "speed": 1.8, "hp": 150.0, "col": Color("c2a46b")},
 	{"id": "tank", "name": "탱크", "price": 600, "desc": "단단한 장갑과\n폭발하는 포탄", "time": 15.0, "speed": 1.15, "hp": 400.0, "col": Color("6f8a3c")},
 	{"id": "ship", "name": "전투함", "price": 1300, "desc": "수륙양용 전투함.\n사방으로 미사일 일제 사격", "time": 15.0, "speed": 1.4, "hp": 300.0, "col": Color("607d8b")},
-	{"id": "plane", "name": "전투기", "price": 1, "desc": "하늘을 날아 무적!\n융단 폭격과 기관포", "time": 12.0, "speed": 2.2, "hp": 1.0, "col": Color("90a4ae")},
+	{"id": "plane", "name": "전투기", "price": 2000, "desc": "하늘을 날아 무적!\n융단 폭격과 기관포", "time": 12.0, "speed": 2.2, "hp": 1.0, "col": Color("90a4ae")},
 ]
 
 static func vehicle(id: String) -> Dictionary:
