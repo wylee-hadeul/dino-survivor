@@ -146,7 +146,7 @@ func after_title() -> void:
 
 func choose_character(c: String) -> void:
 	character = c
-	voice.pitch = 0.85 if c == "f" else 1.4  # 남자는 높게, 여자는 낮게
+	voice.pitch = 1.1 if c == "f" else 1.4  # 남자는 높게, 여자는 그보다 낮게 (너무 굵지 않게)
 	save_game()
 	dlog("character: %s" % c)
 
@@ -398,7 +398,7 @@ func _load() -> void:
 			equipped = "jeep"
 		voice.tts_enabled = bool(cfg.get_value("save", "voice", true))
 		character = str(cfg.get_value("save", "character", ""))
-	voice.pitch = 0.85 if character == "f" else 1.4
+	voice.pitch = 1.1 if character == "f" else 1.4
 	selected_stage = unlocked
 
 

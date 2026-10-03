@@ -298,8 +298,8 @@ func _draw_title(v: Vector2) -> void:
 
 
 const CHAR_INFO := {
-	"m": {"name": "민준", "desc": "씩씩한 남자 탐험가", "col": Color("6b7d3a")},
-	"f": {"name": "서연", "desc": "용감한 여자 탐험가", "col": Color("3f8f7f")},
+	"m": {"name": "철수", "desc": "씩씩한 남자 탐험가", "col": Color("6b7d3a")},
+	"f": {"name": "영희", "desc": "용감한 여자 탐험가", "col": Color("3f8f7f")},
 }
 
 
